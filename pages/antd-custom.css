@@ -1,0 +1,17 @@
+.placeholder {
+  position: absolute;
+  background-color: white;
+  border-radius: 3px;
+  border: dashed 1px blue;
+  background-color: white;
+}
+
+.ant-tree-switcher {
+  min-width: 48px;
+}
+
+.ant-tree-switcher-icon svg {
+  margin-top: 8px;
+  min-width: 48px;
+  min-height: 48px;
+}
