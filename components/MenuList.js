@@ -25,8 +25,8 @@ import Dialog from '@material-ui/core/Dialog'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import DialogActions from '@material-ui/core/DialogActions'
 import IconButton from '@material-ui/core/IconButton'
-import CheckBoxOutlineBlankOutlinedIcon from '@material-ui/icons/CheckBoxOutlineBlankOutlined'
-import CheckBoxOutlinedIcon from '@material-ui/icons/CheckBoxOutlined'
+import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked'
+import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked'
 import AccountTreeOutlinedIcon from '@material-ui/icons/AccountTreeOutlined'
 import { isEmpty } from 'lodash'
 import MenuTree from './MenuTree'
@@ -379,9 +379,9 @@ export default function ItemListDisplay (props) {
                                   onClick={() => updateItemSelected(isSelected ? {} : item)}
                                 >
                                   {isSelected ? (
-                                    <CheckBoxOutlinedIcon />
+                                    <RadioButtonCheckedIcon />
                                   ) : (
-                                    <CheckBoxOutlineBlankOutlinedIcon />
+                                    <RadioButtonUncheckedIcon />
                                   )}
                                 </IconButton>
                                 {item.name}
