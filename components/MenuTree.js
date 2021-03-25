@@ -25,6 +25,8 @@ import DeleteOutlineOutlinedIcon from '@material-ui/icons/DeleteOutlineOutlined'
 import Dialog from '@material-ui/core/Dialog'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import DialogActions from '@material-ui/core/DialogActions'
+import { avoidCircularReference } from '../utilities/serialize'
+import uuid from 'react-uuid'
 
 const useStyles = makeStyles(theme => ({
   main: {
@@ -34,7 +36,7 @@ const useStyles = makeStyles(theme => ({
     flexDirection: 'column',
     textAlign: 'left',
     margin: theme.spacing(10, 0, 0, 0),
-    overflow: 'auto',
+    overflow: 'hidden',
   },
   card: {
     width: 200,
@@ -57,6 +59,23 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: theme.palette.secondary.light,
     padding: 7,
   },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: theme.spacing(2),
+    padding: theme.spacing(2),
+  },
+  paper: {
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+  },
+  textField: {
+    margin: theme.spacing(2),
+    padding: theme.spacing(2),
+  },
 }))
 
 export default function MenuTree (props) {
@@ -64,11 +83,13 @@ export default function MenuTree (props) {
   const [expandedKeys, setExpandedKeys] = useState([])
   const [selectedKeys, setSelectedKeys] = useState([])
   const [itemModal, setItemModal] = useState(false)
+  const [addingItem, setAddingItem] = useState(false)
   const [itemSelected, setItemSelected] = useState({})
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false)
   const classes = useStyles()
 
   useEffect(() => {
+    setItemSelected({})
     const tree = props && props.menu && props.menu.tree ? props.menu.tree : []
     setTreeData(tree)
   }, [props])
@@ -92,13 +113,9 @@ export default function MenuTree (props) {
   }
 
   const itemAdd = () => {
-    const index =
-      Math.max.apply(
-        Math,
-        items.map(item => item.index)
-      ) + 1
-    const newItem = { index, name: '', tree: [] }
+    const newItem = { key: uuid(), title: '', children: [] }
     updateItemSelected(newItem)
+    setAddingItem(true)
     setItemModal(true)
   }
 
@@ -115,76 +132,34 @@ export default function MenuTree (props) {
   }
 
   const itemDelete = async () => {
-    // Remove item and reorder
-    const updatedItems = items
-      .map(item => {
-        if (item._id !== itemSelected._id) return item
-      })
-      .filter(noNull => noNull)
-      .sort((a, b) => (a.index > b.index ? 1 : -1))
-    setItems(updatedItems)
-    itemOrderSave(updatedItems)
-    setItemSelected({})
-    setItemModal(false)
+    // Walk the tree and update it.
+    const updatedTree = deleteNode(treeData, itemSelected)
 
-    client({
-      method: 'delete',
-      url: `/${API_PATH}/${itemSelected._id}`,
-    })
-      .then(response => {
-        enqueueSnackbar(`${ITEM_NAME} Deleted`, {
-          variant: 'success',
-        })
-        // Put this into the list in order
-        const updatedItems = items
-          .map(item => {
-            if (item._id !== itemSelected._id) return item
-          })
-          .filter(noNull => noNull)
-      })
-      .catch(error => {
-        enqueueSnackbar(`Error Deleting ${ITEM_NAME}: ${error}`, {
-          variant: 'error',
-        })
-      })
+    setTreeData(updatedTree)
+    props.saveTree(updatedTree)
+
     setConfirmDeleteDialog(false)
   }
 
   const itemCancel = () => {
     updateItemSelected({})
+    setAddingItem(false)
     setItemModal(false)
   }
 
   const itemSave = async () => {
-    const itemToSave = JSON.parse(JSON.stringify(itemSelected))
-    setItemSelected({})
-    setItemModal(false)
+    let updatedTree = []
+    if (addingItem) {
+      updatedTree = [itemSelected].concat(treeData)
+      setAddingItem(false)
+    } else {
+      updatedTree = updateNode(treeData, itemSelected)
+    }
 
-    client({
-      method: 'patch',
-      url: `/${API_PATH}`,
-      data: itemToSave,
-    })
-      .then(response => {
-        enqueueSnackbar(`${ITEM_NAME} Saved`, {
-          variant: 'success',
-        })
-        // Put this into the list in order
-        const updatedItems = items
-          .map(item => {
-            if (item._id !== itemToSave._id) return item
-          })
-          .filter(noNull => noNull)
-          .concat(response.data) // Saved with _id
-          .sort((a, b) => (a.index > b.index ? 1 : -1))
-        setItems(updatedItems)
-        itemOrderSave(updatedItems)
-      })
-      .catch(error => {
-        enqueueSnackbar(`Error Saving ${ITEM_NAME}: ${error}`, {
-          variant: 'error',
-        })
-      })
+    setTreeData(updatedTree)
+    props.saveTree(updatedTree)
+
+    setItemModal(false)
   }
 
   const getNodeDisplay = node => {
@@ -205,6 +180,26 @@ export default function MenuTree (props) {
     )
   }
 
+  const deleteNode = (nodes, nodeToDelete) => {
+    return nodes
+      .map(node => {
+        if (node.children) {
+          node.children = deleteNode(node.children, nodeToDelete)
+        }
+        return nodeToDelete.key == node.key ? null : node
+      })
+      .filter(noNull => noNull)
+  }
+
+  const updateNode = (nodes, nodeToUpdate) => {
+    return nodes.map(node => {
+      if (node.children) {
+        node.children = updateNode(node.children, nodeToUpdate)
+      }
+      return nodeToUpdate.key == node.key ? nodeToUpdate : node
+    })
+  }
+
   const renderTreeNodes = nodes => {
     return nodes.map(node => {
       if (node.children) {
@@ -221,7 +216,7 @@ export default function MenuTree (props) {
   const onSelect = (keys, info) => {
     setSelectedKeys(keys)
     const { node } = info
-    setItemSelected(node)
+    setItemSelected(node.dataRef)
   }
 
   const onDragEnter = info => {
@@ -288,12 +283,13 @@ export default function MenuTree (props) {
     }
 
     setTreeData(data)
+    props.saveTree(data)
   }
 
   return (
     <Container maxWidth='lg'>
       <div className={classes.main}>
-        <Grid container direction='row' justify='flex-start'>
+        <Grid container direction='row' justify='flex-start' style={{ marginLeft: 64 }}>
           <IconButton color='primary' onClick={itemAdd}>
             <AddIcon fontSize='large' />
           </IconButton>
@@ -311,7 +307,6 @@ export default function MenuTree (props) {
           )}
         </Grid>
         <Tree
-          style={{ marginLeft: 20 }}
           className='draggable-tree'
           defaultExpandedKeys={expandedKeys}
           draggable
@@ -347,27 +342,10 @@ export default function MenuTree (props) {
                 <TextField
                   className={classes.textField}
                   variant='outlined'
-                  id='index'
-                  name='index'
-                  label='Index'
-                  type='number'
-                  InputProps={{
-                    inputProps: {
-                      min: 0,
-                    },
-                  }}
-                  defaultValue={itemSelected.index || 0}
-                  onChange={changeField}
-                />
-              </FormControl>
-              <FormControl>
-                <TextField
-                  className={classes.textField}
-                  variant='outlined'
-                  id='name'
-                  name='name'
-                  label='Name'
-                  defaultValue={itemSelected.name || ''}
+                  id='title'
+                  name='title'
+                  label='Title'
+                  defaultValue={itemSelected.title || ''}
                   onChange={changeField}
                 />
               </FormControl>

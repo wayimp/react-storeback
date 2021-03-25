@@ -177,6 +177,31 @@ export default function ItemListDisplay (props) {
     setItemModal(false)
   }
 
+  const saveTree = async updatedTree => {
+    const itemToSave = JSON.parse(JSON.stringify(itemSelected))
+    itemToSave.tree = updatedTree
+    changeValue('tree', updatedTree)
+
+    const updatedItems = items.map(item => (item._id !== itemToSave._id ? item : itemToSave))
+    setItems(updatedItems)
+
+    client({
+      method: 'patch',
+      url: `/${API_PATH}`,
+      data: itemToSave,
+    })
+      .then(response => {
+        enqueueSnackbar('Tree Saved', {
+          variant: 'success',
+        })
+      })
+      .catch(error => {
+        enqueueSnackbar(`Error Saving Tree: ${error}`, {
+          variant: 'error',
+        })
+      })
+  }
+
   const itemSave = async () => {
     const itemToSave = JSON.parse(JSON.stringify(itemSelected))
     setItemSelected({})
@@ -210,26 +235,28 @@ export default function ItemListDisplay (props) {
   }
 
   const itemOrderSave = async reordered => {
-    const updates = reordered.map((update, index) => {
-      update.index = index
-      return update
-    })
+    if (reordered && reordered.length > 0) {
+      const updates = reordered.map((update, index) => {
+        update.index = index
+        return update
+      })
 
-    client({
-      method: 'post',
-      url: `/${API_PATH}-order`,
-      data: updates,
-    })
-      .then(response => {
-        enqueueSnackbar(`${ITEM_NAME} Order Saved`, {
-          variant: 'success',
-        })
+      client({
+        method: 'post',
+        url: `/${API_PATH}-order`,
+        data: updates,
       })
-      .catch(error => {
-        enqueueSnackbar(`Error Saving ${ITEM_NAME} Order: ${error}`, {
-          variant: 'error',
+        .then(response => {
+          enqueueSnackbar(`${ITEM_NAME} Order Saved`, {
+            variant: 'success',
+          })
         })
-      })
+        .catch(error => {
+          enqueueSnackbar(`Error Saving ${ITEM_NAME} Order: ${error}`, {
+            variant: 'error',
+          })
+        })
+    }
   }
 
   const handleDragStart = event => {
@@ -318,12 +345,14 @@ export default function ItemListDisplay (props) {
     return draggedDOM
   }
 
+  const itemSelectedClone = JSON.parse(JSON.stringify(itemSelected))
+
   return (
     <>
       <Container maxWidth='lg'>
         <div className={classes.main}>
           <Grid container direction='row' justify='flex-start' alignItems='flex-start'>
-            <Grid item xs={3}>
+            <Grid item xs={4} direction='column' justify='flex-start' alignItems='flex-start'>
               <Grid container direction='row' justify='flex-start'>
                 <IconButton color='primary' onClick={itemAdd}>
                   <AddIcon fontSize='large' />
@@ -407,8 +436,8 @@ export default function ItemListDisplay (props) {
                 </Droppable>
               </DragDropContext>
             </Grid>
-            <Grid item xs={9}>
-              <MenuTree menu={itemSelected} />
+            <Grid item xs={8} direction='column' justify='flex-start' alignItems='flex-start'>
+              <MenuTree menu={itemSelectedClone} saveTree={saveTree} />
             </Grid>
           </Grid>
         </div>
@@ -502,6 +531,7 @@ export default function ItemListDisplay (props) {
           </Button>
         </DialogActions>
       </Dialog>
+      {JSON.stringify(itemSelected.tree)}
     </>
   )
 }

@@ -44,6 +44,7 @@
     "react-beautiful-dnd": "^13.0.0",
     "react-dom": "^17.0.1",
     "react-storefront": "^8.17.4",
+    "react-uuid": "^1.0.2",
     "react-visibility-sensor": "^5.1.1",
     "webpack": "^4.46.0"
   },
