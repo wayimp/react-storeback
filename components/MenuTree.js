@@ -220,11 +220,11 @@ export default function MenuTree (props) {
   }
 
   const onDragEnter = info => {
-    console.log(info)
+    //console.log(info)
   }
 
   const onDrop = info => {
-    console.log(info)
+    //console.log(info)
     const dropKey = info.node.key
     const dragKey = info.dragNode.key
     const dropPos = info.node.pos.split('-')

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import RootRef from '@material-ui/core/RootRef'
 import { Container, Typography } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
@@ -29,18 +29,10 @@ import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked'
 import AccountTreeOutlinedIcon from '@material-ui/icons/AccountTreeOutlined'
 import { isEmpty } from 'lodash'
-import MenuTree from './MenuTree'
-import Select from 'react-select'
 
-const ITEM_NAME = 'Menu'
-const API_PATH = 'menus'
+const ITEM_NAME = 'Setting'
+const API_PATH = 'settings'
 
-const selectStyles = {
-  menu: base => ({
-    ...base,
-    zIndex: 100,
-  }),
-}
 const useStyles = makeStyles(theme => ({
   modal: {
     display: 'flex',
@@ -84,60 +76,9 @@ export default function ItemListDisplay (props) {
   const [itemModal, setItemModal] = useState(false)
   const [itemSelected, setItemSelected] = useState({})
   const [items, setItems] = useState(props[API_PATH] || [])
-  const [settings, setSettings] = useState(props.settings || [])
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false)
   const queryAttr = 'data-rbd-drag-handle-draggable-id'
   const [placeholderProps, setPlaceholderProps] = useState({})
-  const [menuOptions, setMenuOptions] = useState([])
-  const [tabsMenu, setTabsMenu] = useState({})
-  const [hamburgerMenu, setHamburgerMenu] = useState({})
-
-  useEffect(() => {
-    const menu_options = items.map(menu => {
-      return { value: menu._id, label: menu.name }
-    })
-    setMenuOptions(menu_options)
-
-    const tabs_menu_setting = settings.find(setting => setting.name == 'menu_tabs')
-    const tabs_menu = menu_options.find(option => option.value == tabs_menu_setting.value)
-    setTabsMenu(tabs_menu)
-
-    const hamburger_menu_setting = settings.find(setting => setting.name == 'menu_hamburger')
-    const hamburger_menu = menu_options.find(option => option.value == hamburger_menu_setting.value)
-    setHamburgerMenu(hamburger_menu)
-  }, [items])
-
-  const handleTabsMenuChange = option => {
-    setTabsMenu(option)
-    const setting = props.settings.find(setting => setting.name == 'menu_tabs')
-    setting.value = option.value
-    updateSetting(setting)
-  }
-
-  const handleHamburgerMenuChange = option => {
-    setHamburgerMenu(option)
-    const setting = props.settings.find(setting => setting.name == 'menu_hamburger')
-    setting.value = option.value
-    updateSetting(setting)
-  }
-
-  const updateSetting = setting => {
-    client({
-      method: 'patch',
-      url: `/settings`,
-      data: setting,
-    })
-      .then(response => {
-        enqueueSnackbar('Setting Updated', {
-          variant: 'success',
-        })
-      })
-      .catch(error => {
-        enqueueSnackbar(`Error Updating Setting: ${error}`, {
-          variant: 'error',
-        })
-      })
-  }
 
   const getItemStyle = (isSelected, isDragging, draggableStyle) => ({
     width: 250,
@@ -145,8 +86,10 @@ export default function ItemListDisplay (props) {
     padding: grid * 2,
     marginBottom: grid,
     borderRadius: 3,
+
     border: isDragging ? '1px solid green' : isSelected ? '1px solid black' : '1px solid grey',
     background: isSelected ? '#dbfffc' : '#d6dcf9',
+
     // styles we need to apply on draggables
     ...draggableStyle,
   })
@@ -407,46 +350,8 @@ export default function ItemListDisplay (props) {
     <>
       <Container maxWidth='lg'>
         <div className={classes.main}>
-          <Grid container direction='row' justify='flex-start'>
-            <FormControlLabel
-              labelPlacement='top'
-              control={
-                <div style={{ width: '240px' }}>
-                  <Select
-                    id='tabs'
-                    name='tabs'
-                    onChange={handleTabsMenuChange}
-                    options={menuOptions}
-                    styles={selectStyles}
-                    value={tabsMenu || ''}
-                    className='itemsSelect'
-                    classNamePrefix='select'
-                  />
-                </div>
-              }
-              label='Tabs Menu'
-            />
-            <FormControlLabel
-              labelPlacement='top'
-              control={
-                <div style={{ width: '240px' }}>
-                  <Select
-                    id='hamburger'
-                    name='hamburger'
-                    onChange={handleHamburgerMenuChange}
-                    options={menuOptions}
-                    styles={selectStyles}
-                    value={hamburgerMenu || ''}
-                    className='itemsSelect'
-                    classNamePrefix='select'
-                  />
-                </div>
-              }
-              label='Hamburger Menu'
-            />
-          </Grid>
           <Grid container direction='row' justify='flex-start' alignItems='flex-start'>
-            <Grid item xs={4}>
+            <Grid item xs={4} >
               <Grid container direction='row' justify='flex-start'>
                 <IconButton color='primary' onClick={itemAdd}>
                   <AddIcon fontSize='large' />
@@ -530,9 +435,6 @@ export default function ItemListDisplay (props) {
                 </Droppable>
               </DragDropContext>
             </Grid>
-            <Grid item xs={8}>
-              <MenuTree menu={itemSelectedClone} saveTree={saveTree} />
-            </Grid>
           </Grid>
         </div>
       </Container>
@@ -577,11 +479,11 @@ export default function ItemListDisplay (props) {
                 <TextField
                   className={classes.textField}
                   variant='outlined'
-                  id='name'
-                  name='name'
-                  label='Name'
-                  defaultValue={itemSelected.name || ''}
+                  name='value'
+                  label={itemSelected.name || 'Unknown'}
+                  defaultValue={itemSelected.value || ''}
                   onChange={changeField}
+                  helperText={itemSelected.details || ''}
                 />
               </FormControl>
             </Grid>

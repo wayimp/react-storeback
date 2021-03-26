@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import MenuList from '../components/MenuList'
+import SettingList from '../components/SettingList'
 import { Container, Typography } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import CmsSlot from 'react-storefront/CmsSlot'
@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-export default function Menus (props) {
+export default function Settings (props) {
   const classes = useStyles()
 
   return (
@@ -33,7 +33,7 @@ export default function Menus (props) {
       </Head>
       <Container maxWidth='lg'>
         <div className={classes.main}>
-          <MenuList menus={props.pageData.menus} settings={props.pageData.settings} />
+          <SettingList settings={props.pageData.settings} />
         </div>
       </Container>
     </>
@@ -41,7 +41,7 @@ export default function Menus (props) {
 }
 
 export async function getServerSideProps (context) {
-  const pageData = await client.get('/menus').then(response => response.data)
+  const pageData = await client.get('/settings').then(response => response.data)
 
   return {
     props: {

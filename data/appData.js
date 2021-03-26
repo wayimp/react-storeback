@@ -14,6 +14,11 @@ const appData = {
       as: '/menus',
       href: '/menus',
     },
+    {
+      text: 'Settings',
+      as: '/settings',
+      href: '/settings',
+    },
   ],
 }
 
