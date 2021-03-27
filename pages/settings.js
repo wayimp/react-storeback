@@ -6,8 +6,7 @@ import CmsSlot from 'react-storefront/CmsSlot'
 import LoadMask from 'react-storefront/LoadMask'
 import Head from 'next/head'
 import Button from '@material-ui/core/Button'
-import { appData } from '../data/appData'
-import { client } from '../data/client'
+import { client } from '../utilities/client'
 import Grid from '@material-ui/core/Grid'
 
 const useStyles = makeStyles(theme => ({
@@ -41,6 +40,7 @@ export default function Settings (props) {
 }
 
 export async function getServerSideProps (context) {
+  const appData = await client.get('/appData').then(response => response.data)
   const pageData = await client.get('/settings').then(response => response.data)
 
   return {

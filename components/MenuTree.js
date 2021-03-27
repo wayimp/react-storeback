@@ -4,7 +4,7 @@ const { TreeNode } = Tree
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import Container from '@material-ui/core/Container'
-import { client } from '../data/client'
+import { client } from '../utilities/client'
 import { useSnackbar } from 'notistack'
 import AddIcon from '@material-ui/icons/Add'
 import Modal from '@material-ui/core/Modal'
