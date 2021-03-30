@@ -11,8 +11,9 @@ import useJssStyles from 'react-storefront/hooks/useJssStyles'
 import SessionProvider from 'react-storefront/session/SessionProvider'
 import useAppStore from 'react-storefront/hooks/useAppStore'
 import { SnackbarProvider } from 'notistack'
-import "antd/dist/antd.css";
-import "./antd-custom.css";
+import 'antd/dist/antd.css'
+import './style-antd.css'
+import './style-slate.css'
 
 const styles = theme => ({
   main: {

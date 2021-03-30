@@ -400,8 +400,6 @@ export default function ItemListDisplay (props) {
     return draggedDOM
   }
 
-  const itemSelectedClone = JSON.parse(JSON.stringify(itemSelected))
-
   return (
     <>
       <Container maxWidth='lg'>
@@ -529,9 +527,13 @@ export default function ItemListDisplay (props) {
                 </Droppable>
               </DragDropContext>
             </Grid>
-            <Grid item xs={8}>
-              <MenuTree menu={itemSelectedClone} saveTree={saveTree} />
-            </Grid>
+            {isEmpty(itemSelected) ? (
+              ''
+            ) : (
+              <Grid item xs={8}>
+                <MenuTree menu={itemSelected} saveTree={saveTree} />
+              </Grid>
+            )}
           </Grid>
         </div>
       </Container>

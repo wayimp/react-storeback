@@ -27,15 +27,17 @@ import DialogTitle from '@material-ui/core/DialogTitle'
 import DialogActions from '@material-ui/core/DialogActions'
 import { avoidCircularReference } from '../utilities/serialize'
 import uuid from 'react-uuid'
+import NavBar from './NavBar'
 
 const useStyles = makeStyles(theme => ({
   main: {
     width: '100%',
     display: 'flex',
     alignItems: 'flex-start',
+    justify: 'flex-start',
     flexDirection: 'column',
     textAlign: 'left',
-    margin: theme.spacing(10, 0, 0, 0),
+    margin: theme.spacing(0, 0, 0, 0),
     overflow: 'hidden',
   },
   card: {
@@ -57,7 +59,7 @@ const useStyles = makeStyles(theme => ({
     marginBottom: 8,
     borderRadius: 3,
     backgroundColor: theme.palette.secondary.light,
-    padding: 7,
+    padding: 8,
   },
   modal: {
     display: 'flex',
@@ -110,6 +112,20 @@ export default function MenuTree (props) {
     const fieldName = event.target.name
     const fieldValue = event.target.value
     changeValue(fieldName, fieldValue)
+  }
+
+  const fillTree = tree => {
+    return tree.map(branch => {
+      branch.text = branch.title
+      branch.as = branch.title
+      branch.href = branch.title
+      if (branch.children) {
+        branch.items = fillTree(branch.children)
+      } else {
+        branch.expanded = false
+      }
+      return branch
+    })
   }
 
   const itemAdd = () => {
@@ -289,6 +305,7 @@ export default function MenuTree (props) {
   return (
     <Container maxWidth='lg'>
       <div className={classes.main}>
+        <NavBar style={{ border: '1px solid red' }} tabs={fillTree(treeData || [])} />
         <Grid container direction='row' justify='flex-start' style={{ marginLeft: 64 }}>
           <IconButton color='primary' onClick={itemAdd}>
             <AddIcon fontSize='large' />
